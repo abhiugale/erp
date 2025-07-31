@@ -1,0 +1,13 @@
+.main {
+  margin-left: 250px;
+}
+
+.large-icon {
+  font-size: 1.5em;
+}
+
+/* styles.css */
+.collapsed-sidebar .nav-link {
+  justify-content: center;
+  text-align: center;
+}
