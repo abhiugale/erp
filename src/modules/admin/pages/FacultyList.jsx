@@ -149,12 +149,12 @@ const FacultyList = () => {
             + Add Faculty
           </button>
           <button
-            className="btn btn-outline-success me-2"
+            className="btn btn-success me-2"
             onClick={exportExcel}
           >
             Export to Excel
           </button>
-          <button className="btn btn-outline-danger" onClick={exportPDF}>
+          <button className="btn btn-danger" onClick={exportPDF}>
             Export to PDF
           </button>
         </div>

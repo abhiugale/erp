@@ -49,7 +49,11 @@ const Sidebar = () => {
         }}
       >
         <div className="d-flex justify-content-between align-items-center mb-4">
-          {!sidebarCollapsed && <h5>🧠 SmartERP</h5>}
+          {!sidebarCollapsed && (
+            <h5>
+              <img src="../assets/brainbox-logo.png" alt="LOGO" />
+            </h5>
+          )}
           <button
             className="btn btn-sm btn-outline-light"
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}

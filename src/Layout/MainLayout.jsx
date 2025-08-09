@@ -4,10 +4,12 @@ import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 import { useTheme } from "../context/ThemeContext";
 import { useEffect, useState } from "react";
-
+import AIAssistant from "../modules/admin/pages/AIAssistant";
+import { BotMessageSquare } from "lucide-react";
 const MainLayout = () => {
   const { sidebarCollapsed, showMobileSidebar } = useTheme();
   const [isMobile, setIsMobile] = useState(false);
+  const [isAssistantOpen, setIsAssistantOpen] = useState(false);
 
   // Detect screen width
   useEffect(() => {
@@ -27,23 +29,46 @@ const MainLayout = () => {
   };
 
   return (
-    <div className="d-flex">
-      <Sidebar />
+    <>
+      <div className="d-flex">
+        <Sidebar />
 
-      <div
-        className="flex-grow-1"
-        style={{
-          marginLeft: `${getMarginLeft()}px`,
-          transition: "margin-left 0.3s ease",
-          minHeight: "100vh",
-        }}
-      >
-        <Navbar />
-        <div className="p-3">
-          <Outlet />
+        <div
+          className="flex-grow-1"
+          style={{
+            marginLeft: `${getMarginLeft()}px`,
+            transition: "margin-left 0.3s ease",
+            minHeight: "100vh",
+          }}
+        >
+          <Navbar />
+          <div className="p-3">
+            <Outlet />
+          </div>
         </div>
       </div>
-    </div>
+      {/* Floating AI Assistant Chatbot */}
+      <div
+        style={{
+          position: "fixed",
+          bottom: "20px",
+          right: "20px",
+          zIndex: 1050,
+        }}
+      >
+        {!isAssistantOpen ? (
+          <button
+            className="btn btn-primary rounded-circle"
+            style={{ width: "60px", height: "60px" }}
+            onClick={() => setIsAssistantOpen(true)}
+          >
+            <BotMessageSquare />
+          </button>
+        ) : (
+          <AIAssistant onClose={() => setIsAssistantOpen(false)} />
+        )}
+      </div>
+    </>
   );
 };
 
