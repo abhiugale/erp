@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import "../../../css/adminlogin.css";
-import { useAuth } from "../../../context/AuthContext";
+import "../css/adminlogin.css";
+import { useAuth } from "../context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 
-const AdminLogin = () => {
+const AuthLogin = () => {
   // const admins = [
   //   {
   //     id: 1,
@@ -18,38 +18,35 @@ const AdminLogin = () => {
   const navigate = useNavigate();
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
 
-    const handleSubmit = async (e) => {
-      e.preventDefault();
-      setError("");
+    try {
+      const response = await fetch("http://192.168.1.14:8080/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: email, // "email" or "username"
+          password: password,
+        }),
+      });
 
-      try {
-        const response = await fetch("http://localhost:8080/login", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email: email, // "email" or "username"
-            password: password,
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error("Invalid credentials");
-        }
-
-        const data = await response.json();
-
-        // Save token to local storage
-        localStorage.setItem("token", data.token);
-
-        // Redirect to dashboard
-        navigate("/Das");
-      } catch (err) {
-        setError("Login failed: " + err.message);
+      if (!response.ok) {
+        throw new Error("Invalid credentials");
       }
-    };
+
+      const data = await response.json();
+
+      // Save token to local storage
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("role", data.role.toUpperCase());
+
+      // Redirect to dashboard
+      navigate("/admin/main");
+    } catch (err) {
+      setError("Login failed: " + err.message);
+    }
   };
 
   return (
@@ -92,4 +89,4 @@ const AdminLogin = () => {
   );
 };
 
-export default AdminLogin;
+export default AuthLogin;

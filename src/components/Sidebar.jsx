@@ -68,7 +68,7 @@ const Sidebar = () => {
         <ul className="nav flex-column">
           <li className="nav-item">
             <NavLink
-              to="/"
+              to="/admin/main/admindashboard"
               className={`nav-link ${
                 darkMode ? "bg-dark text-white" : "bg-light text-dark"
               }`}
@@ -79,7 +79,7 @@ const Sidebar = () => {
           </li>
           <li className="nav-item">
             <NavLink
-              to="/main/students"
+              to="/admin/main/students"
               className={`nav-link ${
                 darkMode ? "bg-dark text-white" : "bg-light text-dark"
               }`}
@@ -90,7 +90,7 @@ const Sidebar = () => {
           </li>
           <li className="nav-item">
             <NavLink
-              to="/main/faculty"
+              to="/admin/main/faculty"
               className={`nav-link ${
                 darkMode ? "bg-dark text-white" : "bg-light text-dark"
               }`}
@@ -101,7 +101,7 @@ const Sidebar = () => {
           </li>
           <li className="nav-item">
             <NavLink
-              to="/main/exams"
+              to="/admin/main/exams"
               className={`nav-link ${
                 darkMode ? "bg-dark text-white" : "bg-light text-dark"
               }`}
@@ -112,7 +112,7 @@ const Sidebar = () => {
           </li>
           <li className="nav-item">
             <NavLink
-              to="/main/library"
+              to="/admin/main/library"
               className={`nav-link ${
                 darkMode ? "bg-dark text-white" : "bg-light text-dark"
               }`}
@@ -123,7 +123,7 @@ const Sidebar = () => {
           </li>
           <li className="nav-item">
             <NavLink
-              to="/main/finance"
+              to="/admin/main/finance"
               className={`nav-link ${
                 darkMode ? "bg-dark text-white" : "bg-light text-dark"
               }`}
@@ -134,7 +134,7 @@ const Sidebar = () => {
           </li>
           <li className="nav-item">
             <NavLink
-              to="/main/ai-assistant"
+              to="/admin/main/ai-assistant"
               className={`nav-link ${
                 darkMode ? "bg-dark text-white" : "bg-light text-dark"
               }`}
@@ -145,7 +145,7 @@ const Sidebar = () => {
           </li>
           <li className="nav-item">
             <NavLink
-              to="/main/predict"
+              to="/admin/main/predict"
               className={`nav-link ${
                 darkMode ? "bg-dark text-white" : "bg-light text-dark"
               }`}
@@ -156,7 +156,7 @@ const Sidebar = () => {
           </li>
           <li className="nav-item">
             <NavLink
-              to="/main/reports"
+              to="/admin/main/reports"
               className={`nav-link ${
                 darkMode ? "bg-dark text-white" : "bg-light text-dark"
               }`}

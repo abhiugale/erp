@@ -3,7 +3,7 @@ import NoticeBoard from "../../../components/NoticeBoard";
 import UpcomingEvents from "../../../components/UpcomingEvents";
 import PageLayout from "../../../components/PageLayout";
 import "./../../../css/dashboard.css";
-const Dashboard = () => {
+const AdminDashboard = () => {
   return (
     <PageLayout title="Dashboard">
       <div className="d-flex">
@@ -23,4 +23,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default AdminDashboard;
