@@ -1,39 +1,76 @@
-import { useState } from "react";
-import { Pencil, Trash2, Eye } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Pencil, Trash2, Eye, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
-import PageLayout from "../../../components/PageLayout";
 import "react-toastify/dist/ReactToastify.css";
+
+const API_BASE = "http://localhost:5000/api/students"; // Spring Boot API URL
 
 const StudentList = () => {
   const navigate = useNavigate();
 
-  const [students, setStudents] = useState([
-    { id: 1, name: "Abhishek Ugale", roll: "101", grade: "X", section: "A" },
-    { id: 2, name: "Priya Sharma", roll: "102", grade: "X", section: "B" },
-    { id: 3, name: "Rohan Mehta", roll: "103", grade: "XI", section: "A" },
-    { id: 4, name: "Sneha Kapoor", roll: "104", grade: "XI", section: "B" },
-  ]);
-
+  const [students, setStudents] = useState([]);
   const [formData, setFormData] = useState({
-    id: null,
+    studentId: null,
     name: "",
-    roll: "",
+    email: "",
+    phone: "",
+    studentPrn: "",
     grade: "",
+    semester: "",
     section: "",
+    department: "",
+    admissionDate: "",
+    password: ""
   });
   const [isEdit, setIsEdit] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterGrade, setFilterGrade] = useState("");
+  const [filterDepartment, setFilterDepartment] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(false);
   const itemsPerPage = 5;
 
+  // ✅ Fetch all students from API
+  const fetchStudents = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(API_BASE, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      if (!response.ok) throw new Error("Failed to fetch students");
+      const data = await response.json();
+      setStudents(data);
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStudents();
+  }, []);
+
+  // ✅ Export Functions
   const exportExcel = () => {
-    const ws = XLSX.utils.json_to_sheet(students);
+    const ws = XLSX.utils.json_to_sheet(students.map(s => ({
+      PRN: s.studentPrn,
+      Name: s.name,
+      Email: s.email,
+      Phone: s.phone,
+      Grade: s.grade,
+      Semester: s.semester,
+      Section: s.section,
+      Department: s.department,
+      'Admission Date': s.admissionDate
+    })));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Students");
     XLSX.writeFile(wb, "StudentList.xlsx");
@@ -43,58 +80,130 @@ const StudentList = () => {
     const doc = new jsPDF();
     doc.text("Student List", 14, 10);
     doc.autoTable({
-      head: [["Roll", "Name", "Grade", "Section"]],
-      body: filteredStudents.map((s) => [s.roll, s.name, s.grade, s.section]),
+      head: [["PRN", "Name", "Email", "Phone", "Grade", "Semester", "Department", "Section"]],
+      body: students.map((s) => [
+        s.studentPrn, 
+        s.name, 
+        s.email, 
+        s.phone, 
+        s.grade, 
+        s.semester, 
+        s.department, 
+        s.section
+      ]),
     });
     doc.save("StudentList.pdf");
   };
 
-  const filteredStudents = students.filter((s) => {
-    const matchesSearch =
-      s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.roll.includes(searchQuery);
-    const matchesGrade = filterGrade ? s.grade === filterGrade : true;
-    return matchesSearch && matchesGrade;
-  });
-
+  // ✅ CRUD HANDLERS
   const handleAdd = () => {
-    setFormData({ id: null, name: "", roll: "", grade: "", section: "" });
+    setFormData({
+      studentId: null,
+      studentPrn: "",
+      name: "",
+      email: "",
+      phone: "",
+      grade: "",
+      semester: "",
+      section: "",
+      department: "",
+      admissionDate: new Date().toISOString().split('T')[0],
+      password: ""
+    });
     setIsEdit(false);
     setShowModal(true);
   };
 
   const handleEdit = (student) => {
-    setFormData(student);
+    setFormData({
+      ...student,
+      password: "" // Don't show password in edit form
+    });
     setIsEdit(true);
     setShowModal(true);
   };
 
-  const handleDelete = (id) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this student?"
-    );
-    if (confirmDelete) {
-      setStudents(students.filter((s) => s.id !== id));
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this student?")) return;
+    try {
+      const response = await fetch(`${API_BASE}/${id}`, {
+        method: "DELETE",
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Delete failed");
+      }
+      
       toast.success("Student deleted successfully");
+      fetchStudents();
+    } catch (error) {
+      toast.error(error.message);
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isEdit) {
-      setStudents(students.map((s) => (s.id === formData.id ? formData : s)));
-      toast.success("Student updated successfully");
-    } else {
-      setStudents([...students, { ...formData, id: Date.now() }]);
-      toast.success("Student added successfully");
+    setLoading(true);
+    
+    try {
+      const method = isEdit ? "PUT" : "POST";
+      const url = isEdit ? `${API_BASE}/${formData.studentId}` : API_BASE;
+
+      const payload = { ...formData };
+      // Don't send password if it's empty in edit mode
+      if (isEdit && !payload.password) {
+        delete payload.password;
+      }
+
+      const response = await fetch(url, {
+        method,
+        headers: { 
+          "Content-Type": "application/json",
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const responseData = await response.json();
+
+      if (!response.ok) {
+        throw new Error(responseData.message || "Failed to save student");
+      }
+
+      toast.success(isEdit ? "Student updated successfully" : "Student added successfully");
+      setShowModal(false);
+      fetchStudents();
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
     }
-    setShowModal(false);
   };
+
+  // ✅ Filtering + Pagination
+  const filteredStudents = students.filter((s) => {
+    const matchesSearch =
+      s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      s.studentPrn.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesGrade = filterGrade ? s.grade === filterGrade : true;
+    const matchesDepartment = filterDepartment ? s.department === filterDepartment : true;
+    return matchesSearch && matchesGrade && matchesDepartment;
+  });
+
   const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
   const currentData = filteredStudents.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
+
+  // Get unique values for filters
+  const uniqueGrades = [...new Set(students.map(s => s.grade).filter(Boolean))];
+  const uniqueDepartments = [...new Set(students.map(s => s.department).filter(Boolean))];
+
   return (
     <div className="container-fluid mt-4">
       <ToastContainer position="top-right" />
@@ -102,16 +211,14 @@ const StudentList = () => {
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h4>Student Management</h4>
         <div>
-          <button className="btn btn-primary me-2" onClick={handleAdd}>
-            + Add Student
+          <button className="btn btn-primary me-2" onClick={handleAdd} disabled={loading}>
+            <Plus size={16} className="me-1" />
+            Add Student
           </button>
-          <button
-            className="btn btn-success me-2"
-            onClick={exportExcel}
-          >
+          <button className="btn btn-success me-2" onClick={exportExcel} disabled={loading}>
             Export to Excel
           </button>
-          <button className="btn btn-danger me-2" onClick={exportPDF}>
+          <button className="btn btn-danger me-2" onClick={exportPDF} disabled={loading}>
             Export to PDF
           </button>
         </div>
@@ -119,92 +226,143 @@ const StudentList = () => {
 
       {/* Search & Filter */}
       <div className="row g-2 mb-3">
-        <div className="col-md-6">
+        <div className="col-md-4">
           <input
             type="text"
-            placeholder="Search by name or roll no..."
+            placeholder="Search by name or PRN..."
             className="form-control"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <div className="col-md-6">
+        <div className="col-md-4">
           <select
             className="form-select"
             value={filterGrade}
             onChange={(e) => setFilterGrade(e.target.value)}
           >
             <option value="">All Grades</option>
-            {[...new Set(students.map((s) => s.grade))].map((grade, i) => (
+            {uniqueGrades.map((grade, i) => (
               <option key={i} value={grade}>
                 Grade {grade}
               </option>
             ))}
           </select>
         </div>
+        <div className="col-md-4">
+          <select
+            className="form-select"
+            value={filterDepartment}
+            onChange={(e) => setFilterDepartment(e.target.value)}
+          >
+            <option value="">All Departments</option>
+            {uniqueDepartments.map((dept, i) => (
+              <option key={i} value={dept}>
+                {dept}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
+      {/* Loading State */}
+      {loading && (
+        <div className="text-center mb-3">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      )}
+
+      {/* Table */}
       <div className="table-responsive">
         <table className="table table-bordered table-striped text-center">
           <thead className="table-dark">
-            <tr className="">
-              <th>Roll No.</th>
+            <tr>
+              <th>PRN</th>
               <th>Name</th>
+              <th>Email</th>
+              <th>Phone</th>
               <th>Grade</th>
+              <th>Semester</th>
               <th>Section</th>
+              <th>Department</th>
               <th>Actions</th>
             </tr>
           </thead>
-          <tbody className="">
-            {filteredStudents.map((student) => (
-              <tr key={student.id}>
-                <td>{student.roll}</td>
-                <td>{student.name}</td>
-                <td>{student.grade}</td>
-                <td>{student.section}</td>
-                <td>
-                  <button
-                    className="btn btn-info btn-sm me-2"
-                    onClick={() => navigate(`/main/students/${student.id}/details`)}
-                  >
-                    <Eye size={16} />
-                  </button>
-                  <button
-                    className="btn btn-warning btn-sm me-2"
-                    onClick={() => handleEdit(student)}
-                  >
-                    <Pencil size={16} />
-                  </button>
-                  <button
-                    className="btn btn-danger btn-sm me-2"
-                    onClick={() => handleDelete(student.id)}
-                  >
-                    <Trash2 size={16} />
-                  </button>
+          <tbody>
+            {currentData.length > 0 ? (
+              currentData.map((student) => (
+                <tr key={student.studentId}>
+                  <td>{student.studentPrn}</td>
+                  <td>{student.name}</td>
+                  <td>{student.email}</td>
+                  <td>{student.phone}</td>
+                  <td>
+                    <span className={`badge ${student.grade ? 'bg-success' : 'bg-secondary'}`}>
+                      {student.grade || 'N/A'}
+                    </span>
+                  </td>
+                  <td>{student.semester}</td>
+                  <td>{student.section}</td>
+                  <td>{student.department}</td>
+                  <td>
+                    <button
+                      className="btn btn-info btn-sm me-2"
+                      onClick={() => navigate(`/admin/main/students/${student.studentId}/details`)}
+                      title="View Details"
+                    >
+                      <Eye size={16} />
+                    </button>
+                    <button
+                      className="btn btn-warning btn-sm me-2"
+                      onClick={() => handleEdit(student)}
+                      title="Edit Student"
+                    >
+                      <Pencil size={16} />
+                    </button>
+                    <button
+                      className="btn btn-danger btn-sm"
+                      onClick={() => handleDelete(student.studentId)}
+                      title="Delete Student"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="9" className="text-muted py-4">
+                  {loading ? 'Loading students...' : 'No students found'}
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>
+
       {/* Pagination */}
-      <nav>
-        <ul className="pagination justify-content-end">
-          {Array.from({ length: totalPages }, (_, i) => (
-            <li
-              key={i}
-              className={`page-item ${currentPage === i + 1 ? "active" : ""}`}
-              onClick={() => setCurrentPage(i + 1)}
-            >
-              <button className="page-link">{i + 1}</button>
-            </li>
-          ))}
-        </ul>
-      </nav>
+      {totalPages > 1 && (
+        <nav>
+          <ul className="pagination justify-content-end">
+            {Array.from({ length: totalPages }, (_, i) => (
+              <li
+                key={i}
+                className={`page-item ${currentPage === i + 1 ? "active" : ""}`}
+                onClick={() => setCurrentPage(i + 1)}
+              >
+                <button className="page-link">{i + 1}</button>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )}
+
       {/* Modal */}
       {showModal && (
         <div className="modal d-block bg-dark bg-opacity-50" tabIndex="-1">
-          <div className="modal-dialog modal-dialog-centered">
+          <div className="modal-dialog modal-dialog-centered modal-lg">
             <form onSubmit={handleSubmit}>
               <div className="modal-content">
                 <div className="modal-header">
@@ -215,38 +373,85 @@ const StudentList = () => {
                     type="button"
                     className="btn-close"
                     onClick={() => setShowModal(false)}
+                    disabled={loading}
                   ></button>
                 </div>
                 <div className="modal-body">
-                  {["name", "roll", "grade", "section"].map((field) => (
-                    <div className="mb-3" key={field}>
-                      <label className="form-label text-capitalize">
-                        {field}
-                      </label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        name={field}
-                        value={formData[field]}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            [e.target.name]: e.target.value,
-                          })
-                        }
-                        required
-                      />
+                  <div className="row">
+                    {[
+                      { field: "studentPrn", label: "PRN Number", type: "text", required: true },
+                      { field: "name", label: "Full Name", type: "text", required: true },
+                      { field: "email", label: "Email", type: "email", required: true },
+                      { field: "phone", label: "Phone", type: "text", required: true },
+                      { field: "department", label: "Department", type: "text", required: true },
+                      { field: "semester", label: "Semester", type: "number", required: true },
+                      { field: "section", label: "Section", type: "text", required: true },
+                      { field: "grade", label: "Grade", type: "text", required: false },
+                      { field: "admissionDate", label: "Admission Date", type: "date", required: true },
+                      ...(isEdit ? [] : [{ field: "password", label: "Password", type: "password", required: true }])
+                    ].map(({ field, label, type, required }) => (
+                      <div className="col-md-6 mb-3" key={field}>
+                        <label className="form-label">
+                          {label} {required && <span className="text-danger">*</span>}
+                        </label>
+                        <input
+                          type={type}
+                          className="form-control"
+                          name={field}
+                          value={formData[field] || ''}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              [field]: e.target.value,
+                            })
+                          }
+                          required={required}
+                          disabled={loading}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  {isEdit && (
+                    <div className="row">
+                      <div className="col-md-6 mb-3">
+                        <label className="form-label">New Password (leave blank to keep current)</label>
+                        <input
+                          type="password"
+                          className="form-control"
+                          name="password"
+                          value={formData.password || ''}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              password: e.target.value,
+                            })
+                          }
+                          disabled={loading}
+                        />
+                      </div>
                     </div>
-                  ))}
+                  )}
                 </div>
                 <div className="modal-footer">
-                  <button type="submit" className="btn btn-success">
-                    {isEdit ? "Update" : "Add"}
+                  <button 
+                    type="submit" 
+                    className="btn btn-success"
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2" />
+                        {isEdit ? "Updating..." : "Adding..."}
+                      </>
+                    ) : (
+                      isEdit ? "Update Student" : "Add Student"
+                    )}
                   </button>
                   <button
                     type="button"
                     className="btn btn-secondary"
                     onClick={() => setShowModal(false)}
+                    disabled={loading}
                   >
                     Cancel
                   </button>

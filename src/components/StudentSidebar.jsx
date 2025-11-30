@@ -1,10 +1,9 @@
 import { NavLink } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext"; // ✅ THIS IS MISSING
-
 import {
   LayoutDashboard,
   Users,
-  Book,
+  BookOpenCheck,
   Library,
   BadgePercent,
   Brain,
@@ -15,7 +14,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 
-const Sidebar = () => {
+const StudentSidebar = () => {
   const {
     darkMode,
     sidebarCollapsed,
@@ -51,7 +50,8 @@ const Sidebar = () => {
         <div className="d-flex justify-content-between align-items-center mb-4">
           {!sidebarCollapsed && (
             <h5>
-              <img src="../assets/brainbox-logo.png" alt="LOGO" />
+              <img src="/public/assests/images/brainbox_logo.png" alt="BrainBox Logo"   style={{ width: '100px', height: 'auto' }}
+ />
             </h5>
           )}
           <button
@@ -68,7 +68,7 @@ const Sidebar = () => {
         <ul className="nav flex-column">
           <li className="nav-item">
             <NavLink
-              to="/admin/main/admindashboard"
+              to="/student/main/studentdashboard"
               className={`nav-link ${
                 darkMode ? "bg-dark text-white" : "bg-light text-dark"
               }`}
@@ -79,29 +79,18 @@ const Sidebar = () => {
           </li>
           <li className="nav-item">
             <NavLink
-              to="/admin/main/students"
+              to="/student/main/attendance"
               className={`nav-link ${
                 darkMode ? "bg-dark text-white" : "bg-light text-dark"
               }`}
             >
               <Users size={20} className="me-2" />
-              {!sidebarCollapsed && "Student Management"}
+              {!sidebarCollapsed && "Attendance"}
             </NavLink>
           </li>
           <li className="nav-item">
             <NavLink
-              to="/admin/main/faculty"
-              className={`nav-link ${
-                darkMode ? "bg-dark text-white" : "bg-light text-dark"
-              }`}
-            >
-              <Book size={20} className="me-2" />
-              {!sidebarCollapsed && "Faculty Management"}
-            </NavLink>
-          </li>
-          <li className="nav-item">
-            <NavLink
-              to="/admin/main/exams"
+              to="/student/main/exams"
               className={`nav-link ${
                 darkMode ? "bg-dark text-white" : "bg-light text-dark"
               }`}
@@ -112,16 +101,27 @@ const Sidebar = () => {
           </li>
           <li className="nav-item">
             <NavLink
-              to="/admin/main/library"
+              to="/student/main/quizzes"
+              className={`nav-link ${
+                darkMode ? "bg-dark text-white" : "bg-light text-dark"
+              }`}
+            >
+              <BookOpenCheck size={20} className="me-2" />
+              {!sidebarCollapsed && "Quizzes"}
+            </NavLink>
+          </li>
+          <li className="nav-item">
+            <NavLink
+              to="/student/main/assignments"
               className={`nav-link ${
                 darkMode ? "bg-dark text-white" : "bg-light text-dark"
               }`}
             >
               <Library size={20} className="me-2" />
-              {!sidebarCollapsed && "Library"}
+              {!sidebarCollapsed && "Assignments"}
             </NavLink>
           </li>
-          <li className="nav-item">
+          {/* <li className="nav-item">
             <NavLink
               to="/admin/main/finance"
               className={`nav-link ${
@@ -143,6 +143,7 @@ const Sidebar = () => {
               {!sidebarCollapsed && "AI Assistance"}
             </NavLink>
           </li>
+          */}
           <li className="nav-item">
             <NavLink
               to="/admin/main/predict"
@@ -153,7 +154,7 @@ const Sidebar = () => {
               <Bot size={20} className="me-2" />
               {!sidebarCollapsed && "AI Predictor"}
             </NavLink>
-          </li>
+          </li> 
           <li className="nav-item">
             <NavLink
               to="/admin/main/reports"
@@ -171,4 +172,4 @@ const Sidebar = () => {
   );
 };
 
-export default Sidebar;
+export default StudentSidebar;

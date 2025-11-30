@@ -1,12 +1,11 @@
 // src/Layout/MainLayout.jsx
 import { Outlet } from "react-router-dom";
-import Sidebar from "../components/Sidebar";
+import FacultySidebar from "../components/FacultySidebar";
 import Navbar from "../components/Navbar";
 import { useTheme } from "../context/ThemeContext";
 import { useEffect, useState } from "react";
-import AIAssistant from "../modules/admin/pages/AIAssistant";
 import { BotMessageSquare } from "lucide-react";
-const MainLayout = () => {
+const FacultyLayout = () => {
   const { sidebarCollapsed, showMobileSidebar } = useTheme();
   const [isMobile, setIsMobile] = useState(false);
   const [isAssistantOpen, setIsAssistantOpen] = useState(false);
@@ -31,7 +30,7 @@ const MainLayout = () => {
   return (
     <>
       <div className="d-flex">
-        <Sidebar />
+        <FacultySidebar />
 
         <div
           className="flex-grow-1"
@@ -72,4 +71,4 @@ const MainLayout = () => {
   );
 };
 
-export default MainLayout;
+export default FacultyLayout;
